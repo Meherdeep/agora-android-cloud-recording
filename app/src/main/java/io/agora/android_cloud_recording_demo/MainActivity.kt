@@ -26,7 +26,7 @@ import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
 
-    private var mRtcEngine : RtcEngine? = null
+    private var mRtcEngine: RtcEngine? = null
 
     val baseUrl: String = "" // Enter the link to your token server
     var recording: Boolean = false
@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         initializeAgoraEngine()
         setupVideoProfile()
         setupLocalVideo()
-        val job = GlobalScope.launch(Dispatchers.Main){
+        val job = GlobalScope.launch(Dispatchers.Main) {
             getToken()
             delay(2000)
         }
@@ -91,12 +91,12 @@ class MainActivity : AppCompatActivity() {
         mRtcEngine!!.enableVideo()
 
         mRtcEngine!!.setVideoEncoderConfiguration(
-            VideoEncoderConfiguration(
-                VideoEncoderConfiguration.VD_640x360,
-                VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15,
-                VideoEncoderConfiguration.STANDARD_BITRATE,
-                VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_FIXED_PORTRAIT
-            )
+                VideoEncoderConfiguration(
+                        VideoEncoderConfiguration.VD_640x360,
+                        VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15,
+                        VideoEncoderConfiguration.STANDARD_BITRATE,
+                        VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_FIXED_PORTRAIT
+                )
         )
     }
 
@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupRemoteVideo(uid: Int) {
         val container =
-            findViewById<View>(R.id.remote_video_view_container) as FrameLayout
+                findViewById<View>(R.id.remote_video_view_container) as FrameLayout
         if (container.childCount >= 1) {
             return
         }
@@ -135,34 +135,34 @@ class MainActivity : AppCompatActivity() {
 
     private fun onRemoteUserLeft() {
         val container =
-            findViewById<View>(R.id.remote_video_view_container) as FrameLayout
+                findViewById<View>(R.id.remote_video_view_container) as FrameLayout
         container.removeAllViews()
     }
 
 
     suspend fun getToken() {
-            val client = OkHttpClient()
-            val url = "$baseUrl/api/get/rtc/$channelName"
-            val request = Request.Builder().url(url).build()
-            client.newCall(request).enqueue(object : Callback{
-                override fun onFailure(call: Call, e: IOException) {
-                    e.printStackTrace()
-                }
+        val client = OkHttpClient()
+        val url = "$baseUrl/api/get/rtc/$channelName"
+        val request = Request.Builder().url(url).build()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                e.printStackTrace()
+            }
 
-                override fun onResponse(call: Call, response: Response) {
-                    response.use {
-                        if (!response.isSuccessful) throw IOException("Unexpected code $response")
-                        val body = response.body?.string()
-                        val obj = JSONObject(body)
-                        tokenValue = obj.getString("rtc_token")
-                        uid = obj.getInt("uid")
-                        println("\n Token Value = $tokenValue")
-                    }
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                    val body = response.body?.string()
+                    val obj = JSONObject(body)
+                    tokenValue = obj.getString("rtc_token")
+                    uid = obj.getInt("uid")
+                    println("\n Token Value = $tokenValue")
                 }
-            })
+            }
+        })
     }
 
-    private fun startRecording(){
+    private fun startRecording() {
         val client = OkHttpClient().newBuilder().build()
         val body = JSONObject()
         try {
@@ -192,7 +192,7 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun stopRecording(){
+    private fun stopRecording() {
         val client = OkHttpClient().newBuilder().build()
 
         val body = JSONObject()
@@ -216,17 +216,17 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onResponse(call: Call, response: Response) {
-                if (response.code == 200){
+                if (response.code == 200) {
                     println("Call recording stopped")
                 }
             }
         })
     }
 
-    private fun startOrStopRecording(isRecording: Boolean){
-        if (isRecording){
+    private fun startOrStopRecording(isRecording: Boolean) {
+        if (isRecording) {
             startRecording()
-        }else{
+        } else {
             stopRecording()
         }
     }
@@ -245,13 +245,13 @@ class MainActivity : AppCompatActivity() {
         mRtcEngine!!.muteLocalAudioStream(iv.isSelected)
     }
 
-    fun onLocalVideoMuteClicked(view: View){
+    fun onRecordVideoClicked(view: View) {
         val iv = view as ImageView
         iv.setOnClickListener {
             recording = !recording
-            if (recording){
+            if (recording) {
                 iv.setColorFilter(resources.getColor(R.color.colorAccent), PorterDuff.Mode.MULTIPLY)
-            } else{
+            } else {
                 iv.clearColorFilter()
             }
             startOrStopRecording(recording)
