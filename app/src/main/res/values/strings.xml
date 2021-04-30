@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Agora Cloud Recording Demo - Android</string>
+    <string name="start_call">Start Call</string>
+    <string name="enter_channel_name">Enter Channel Name</string>
+</resources>
