@@ -28,13 +28,7 @@ class MainActivity : AppCompatActivity() {
 
     private var mRtcEngine: RtcEngine? = null
 
-    val baseUrl: String = "" // Enter the link to your token server
     var recording: Boolean = false
-    var uid = 0
-    var tokenValue: String? = null
-    var rid: String? = null
-    var sid: String? = null
-    var recUid = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,12 +53,7 @@ class MainActivity : AppCompatActivity() {
         initializeAgoraEngine()
         setupVideoProfile()
         setupLocalVideo()
-        val job = GlobalScope.launch(Dispatchers.Main) {
-            getToken()
-            delay(2000)
-        }
-
-        job.invokeOnCompletion { joinChannel() }
+        joinChannel()
     }
 
     private val mRtcEventHandler: IRtcEngineEventHandler = object : IRtcEngineEventHandler() {
@@ -110,10 +99,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun joinChannel() {
         mRtcEngine!!.joinChannel(
-                tokenValue,
+                null,
                 channelName,
                 null,
-                uid
+                0
         )
     }
 
@@ -140,97 +129,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    suspend fun getToken() {
-        val client = OkHttpClient()
-        val url = "$baseUrl/api/get/rtc/$channelName"
-        val request = Request.Builder().url(url).build()
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
-                    val body = response.body?.string()
-                    val obj = JSONObject(body)
-                    tokenValue = obj.getString("rtc_token")
-                    uid = obj.getInt("uid")
-                    println("\n Token Value = $tokenValue")
-                }
-            }
-        })
-    }
-
-    private fun startRecording() {
-        val client = OkHttpClient().newBuilder().build()
-        val body = JSONObject()
-        try {
-            body.put("channel", channelName)
-        } catch (e: JSONException) {
-            e.printStackTrace()
-        }
-        val mediaType = "application/json; charset=utf-8".toMediaType()
-        val request = Request.Builder()
-                .method("POST", body.toString().toRequestBody(mediaType))
-                .url("$baseUrl/api/start/call")
-                .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                val responseBody = response.body?.string()
-                val jobj = JSONObject(responseBody)
-                val data = jobj.getJSONObject("data")
-                rid = data.getString("rid")
-                sid = data.getString("sid")
-                recUid = data.getInt("uid")
-            }
-        })
-    }
-
-    private fun stopRecording() {
-        val client = OkHttpClient().newBuilder().build()
-
-        val body = JSONObject()
-        try {
-            body.put("channel", channelName)
-            body.put("rid", rid)
-            body.put("sid", sid)
-            body.put("uid", recUid)
-        } catch (e: JSONException) {
-            e.printStackTrace()
-        }
-        val mediaType = "application/json; charset=utf-8".toMediaType()
-        val request = Request.Builder()
-                .method("POST", body.toString().toRequestBody(mediaType))
-                .url("$baseUrl/api/stop/call")
-                .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                if (response.code == 200) {
-                    println("Call recording stopped")
-                }
-            }
-        })
-    }
-
-    private fun startOrStopRecording(isRecording: Boolean) {
-        if (isRecording) {
-            startRecording()
-        } else {
-            stopRecording()
-        }
-    }
-
     fun onLocalAudioMuteClicked(view: View?) {
         val iv = view as ImageView
         if (iv.isSelected) {
@@ -254,7 +152,6 @@ class MainActivity : AppCompatActivity() {
             } else {
                 iv.clearColorFilter()
             }
-            startOrStopRecording(recording)
         }
     }
 
